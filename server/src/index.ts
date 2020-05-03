@@ -32,13 +32,17 @@ import { sendRefreshToken } from './sendRefreshToken';
 
     const user = await User.findOne({ id: payload.userId });
 
-    if(!user) {
+    if (!user) {
       return res.send({ ok: false, accessToken: '' });
     }
 
-    sendRefreshToken(res, createAccessToken(user))
+    if (user.tokenVersion !== payload.tokenVersion) {
+      return res.send({ ok: false, accessToken: '' });
+    }
 
-    return res.send({ok: true, accessToken: createAccessToken(user)})
+    sendRefreshToken(res, createAccessToken(user));
+
+    return res.send({ ok: true, accessToken: createAccessToken(user) });
   });
 
   await createConnection();

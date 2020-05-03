@@ -9,11 +9,13 @@ import {
   ObjectType,
   Ctx,
   UseMiddleware,
+  Int,
 } from 'type-graphql';
 import { User } from './entity/User';
 import { hash, compare } from 'bcryptjs';
 import { createRefreshToken, createAccessToken } from './auth';
 import { isAuth } from './isAuth';
+import { getConnection } from 'typeorm';
 
 @ObjectType()
 class LoginResponse {
@@ -31,7 +33,7 @@ export class UserResolver {
   @Query(() => String)
   @UseMiddleware(isAuth)
   bye(@Ctx() { payload }: Context) {
-    console.log(payload)
+    console.log(payload);
     return `Your user id is: ${payload!.userId}`;
   }
 
@@ -60,6 +62,15 @@ export class UserResolver {
     return true;
   }
 
+  @Mutation(() => Boolean)
+  async revokeRefreshTokensForUser(@Arg('userId', () => Int) userId: number) {
+    await getConnection()
+      .getRepository(User)
+      .increment({ id: userId }, 'tokenVersion', 1);
+
+      return true
+  }
+
   @Mutation(() => LoginResponse)
   async login(
     @Arg('email') email: string,
@@ -78,7 +89,7 @@ export class UserResolver {
       throw new Error('bad password');
     }
 
-    sendRefreshToken(res, createAccessToken(user))
+    sendRefreshToken(res, createAccessToken(user));
 
     return {
       accessToken: createRefreshToken(user),
