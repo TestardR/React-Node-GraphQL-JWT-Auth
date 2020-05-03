@@ -1,3 +1,4 @@
+import { sendRefreshToken } from './sendRefreshToken';
 import { Context } from './Context';
 import {
   Resolver,
@@ -77,9 +78,7 @@ export class UserResolver {
       throw new Error('bad password');
     }
 
-    res.cookie('jwt', createAccessToken(user), {
-      httpOnly: true,
-    });
+    sendRefreshToken(res, createAccessToken(user))
 
     return {
       accessToken: createRefreshToken(user),
